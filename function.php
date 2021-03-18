@@ -1,15 +1,19 @@
-private function getJourneyPassengers(
-        $getSummaryRequest, Journey $journey, FareSearchOutput $fareSearchOutput, string $selectedFare, $travelType, $switchedDiscounts = null
+<?php
+
+class TravelPaymentCalculations {
+
+    private function getJourneyPassengers(
+        $getSummaryRequest, Journey $journey, TripFare $tripFare, string $selectedFare, $travelType, $switchedDiscounts = null
     )
     {
         $direction = $journey->getOutgoingType() ? 'I' : 'V';
         $passengerTypes = $this->passengerTypeSessionRepository->get();
         $passengers = new Collection();
         $travellersDiscounts = [];
-        $fareSearchFees = $fareSearchOutput->getFeeTypes();
-        $fareSearchFees = is_array($fareSearchFees) ? $fareSearchFees:array($fareSearchFees);
-        foreach ($fareSearchFees as $fareSearchFee) {
-            foreach ($fareSearchFee->getDepartureFare() as $fare) {
+        $tripFees = $tripFare->getFeeTypes();
+        $tripFees = is_array($tripFees) ? $tripFees:array($tripFees);
+        foreach ($tripFees as $tripFee) {
+            foreach ($tripFee->getDepartureFare() as $fare) {
                 if ($direction === $fare->getDirection() || AvailabilityInterface::OUTGOING_TRAVEL_TYPE === $travelType) {
                     foreach ($fare->getTravellers() as $key => $traveller) {
                         if (null === ($passenger = $passengers->get($key))) {
@@ -38,7 +42,7 @@ private function getJourneyPassengers(
 
                         if ($getSummaryRequest->getInsurance()) {
                             $insurancePrice = $this->getInsurancePrice(
-                                $fareSearchOutput->getInsuranceDataList(),
+                                $tripFare->getInsuranceDataList(),
                                 $journey->getLegs()
                             );
                             if ((float)0 !== $insurancePrice) {
@@ -71,3 +75,6 @@ private function getJourneyPassengers(
 
         return $passengers;
     }
+}
+
+?>
